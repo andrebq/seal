@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,6 +27,7 @@ const (
 
 func encryptCmd() *cli.Command {
 	var file string
+	var readFromStdin bool
 	return &cli.Command{
 		Name:    "encrypt",
 		Aliases: []string{"e"},
@@ -45,12 +47,21 @@ func encryptCmd() *cli.Command {
 			if err != nil {
 				return err
 			}
+			var passwd []byte
 			if terminal.IsTerminal(int(os.Stdin.Fd())) {
 				fmt.Fprint(os.Stdout, "Type the file password: ")
-			}
-			passwd, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				return err
+				passwd, err = terminal.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					return err
+				}
+			} else if !readFromStdin {
+				return errors.New("Stdin is not a terminal but the flags do not allow from passphrases from stdin")
+			} else {
+				passwd, err = ioutil.ReadAll(os.Stdin)
+				if err != nil {
+					return err
+				}
+				passwd = bytes.TrimSpace(passwd)
 			}
 			var key secretKey
 			copy(key[:], argon2.IDKey(passwd, salt[:], 10, 64*1024, 4, 32))
@@ -75,6 +86,13 @@ func encryptCmd() *cli.Command {
 				Aliases:     []string{"i"},
 				Usage:       "Name of the file to encrypt",
 				Destination: &file,
+			},
+			&cli.BoolFlag{
+				Name:        "passphrase-from-stdin",
+				Aliases:     []string{"stdin-pass", "s"},
+				Usage:       "Read the passphrase from standard input",
+				Destination: &readFromStdin,
+				Value:       readFromStdin,
 			},
 		},
 	}
