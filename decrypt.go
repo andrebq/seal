@@ -43,7 +43,7 @@ func decryptCmd() *cli.Command {
 			data = data[24:]
 			var passwd []byte
 			if terminal.IsTerminal(int(os.Stdin.Fd())) {
-				fmt.Fprint(os.Stdout, "Type the file password: ")
+				fmt.Fprint(os.Stdout, "Type the file password: \n")
 				passwd, err = terminal.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
@@ -68,6 +68,7 @@ func decryptCmd() *cli.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Fprintf(os.Stderr, "File %v unsealed to %v\n", file, file[:len(file)-len(fileSuffix)])
 			return nil
 		},
 		Flags: []cli.Flag{

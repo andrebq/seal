@@ -49,7 +49,7 @@ func encryptCmd() *cli.Command {
 			}
 			var passwd []byte
 			if terminal.IsTerminal(int(os.Stdin.Fd())) {
-				fmt.Fprint(os.Stdout, "Type the file password: ")
+				fmt.Fprint(os.Stdout, "Type the file password: \n")
 				passwd, err = terminal.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
@@ -78,6 +78,7 @@ func encryptCmd() *cli.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Fprintf(os.Stderr, "File %v sealed to %v\n", file, file+fileSuffix)
 			return nil
 		},
 		Flags: []cli.Flag{
